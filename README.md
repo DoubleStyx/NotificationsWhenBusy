@@ -1,4 +1,4 @@
-# ModNameGoesHere
+# NotificationsWhenBusy
 
 A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that allows you to toggle whether notifications are received while in Busy status.
 
