@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using NeosModLoader;
 using FrooxEngine;
 using BaseX;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Linq;
 using System;
+using System.Reflection;
 
 namespace NotificationsWhenBusy
 {
@@ -18,6 +19,8 @@ namespace NotificationsWhenBusy
 
         private static ModConfiguration _config;
         private static Harmony _harmony;
+        private static MethodInfo _addNotification;
+        private static HarmonyMethod _transpiler;
 
         [AutoRegisterConfigKey]
         private static ModConfigurationKey<bool> allowNotificationsWhenBusy = new ModConfigurationKey<bool>("Allow notifications when busy", "", () => true);
@@ -26,29 +29,35 @@ namespace NotificationsWhenBusy
         {
             _harmony = new Harmony("net.DoubleStyx.NotificationsWhenBusy");
 
+            // Config and unpatching not working as of v1.0.0; needs fixing
+
+            /*
             _config = GetConfiguration();
             ModConfiguration.OnAnyConfigurationChanged += OnConfigurationChanged;
+            */
 
-            _harmony.PatchAll();
+            _transpiler = new HarmonyMethod(typeof(AddNotification_Patch), nameof(AddNotification_Patch.Transpiler));
+            _addNotification = AccessTools.Method(typeof(NotificationPanel), "AddNotification",
+                new Type[] { typeof(string), typeof(string), typeof(Uri), typeof(color), typeof(string), typeof(Uri), typeof(IAssetProvider<AudioClip>) });
+            
+            _harmony.Patch(_addNotification, transpiler: _transpiler);
         }
 
         private void OnConfigurationChanged(ConfigurationChangedEvent @event)
         {
             if (_config.GetValue(allowNotificationsWhenBusy))
             {
-                _harmony.PatchAll();
+                _harmony.Patch(_addNotification, transpiler: _transpiler);
             }
             else
             {
-                _harmony.UnpatchAll();
+                _harmony.Unpatch(_addNotification, HarmonyPatchType.Transpiler);
             }
         }
 
-        [HarmonyPatch(typeof(NotificationPanel), "AddNotification",
-            new Type[] {typeof(string), typeof(string), typeof(Uri), typeof(color), typeof(string), typeof(Uri), typeof(IAssetProvider<AudioClip>) })]
-        public static class FrooxEngine_NotificationPanel_AddNotification_Patch
+        public static class AddNotification_Patch
         {
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
                 var codes = new List<CodeInstruction>(instructions);
                 for (var i = 0; i < codes.Count; i++)
