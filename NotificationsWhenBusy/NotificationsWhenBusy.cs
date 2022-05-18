@@ -22,14 +22,16 @@ namespace NotificationsWhenBusy
         private static MethodInfo _addNotification;
         private static HarmonyMethod _transpiler;
 
+        // Config and unpatching not working as of v1.0.0; needs fixing
+
+        /*
         [AutoRegisterConfigKey]
         private static ModConfigurationKey<bool> allowNotificationsWhenBusy = new ModConfigurationKey<bool>("Allow notifications when busy", "", () => true);
+        */
 
         public override void OnEngineInit()
         {
             _harmony = new Harmony("net.DoubleStyx.NotificationsWhenBusy");
-
-            // Config and unpatching not working as of v1.0.0; needs fixing
 
             /*
             _config = GetConfiguration();
@@ -43,6 +45,7 @@ namespace NotificationsWhenBusy
             _harmony.Patch(_addNotification, transpiler: _transpiler);
         }
 
+        /*
         private void OnConfigurationChanged(ConfigurationChangedEvent @event)
         {
             if (_config.GetValue(allowNotificationsWhenBusy))
@@ -54,6 +57,7 @@ namespace NotificationsWhenBusy
                 _harmony.Unpatch(_addNotification, HarmonyPatchType.Transpiler);
             }
         }
+        */
 
         public static class AddNotification_Patch
         {
